@@ -8,7 +8,9 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
+-- ----------------------------------------------------------------------------
 -- 1. USERS & ROLES
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.roles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(50) UNIQUE NOT NULL,
@@ -19,12 +21,14 @@ CREATE TABLE IF NOT EXISTS public.roles (
 
 INSERT INTO public.roles (name, description, permissions)
 VALUES 
-('Super Admin', 'Full system control, settings, user management, and audit logs', '["all"]'::jsonb),
+('Super Admin', 'Full system control, settings, user management, and audit logs', '["*"]'::jsonb),
 ('HR/Admin', 'Can manage employees, documents, sites, designations, attendance, and HR settings', '["employees:read", "employees:write", "documents:manage", "sites:manage", "designations:manage", "attendance:manage"]'::jsonb),
 ('Payroll/Admin', 'Access to payroll, compensation, payslips, and statutory government deductions', '["payroll:read", "payroll:write", "employees:read", "reports:payroll"]'::jsonb)
 ON CONFLICT (name) DO NOTHING;
 
+-- ----------------------------------------------------------------------------
 -- 2. CONSTRUCTION SITES / PROJECTS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.sites (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code VARCHAR(30) UNIQUE NOT NULL,
@@ -43,11 +47,22 @@ CREATE TABLE IF NOT EXISTS public.sites (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Seed Sample Construction Sites
+INSERT INTO public.sites (id, code, name, project_name, client, location, project_manager, site_supervisor, start_date, end_date, budget, status, description)
+VALUES
+('a1111111-1111-1111-1111-111111111111', 'SITE-ALP-01', 'CTRL Tower One (BGC High-Rise)', 'CTRL Commercial Tower Phase 1', 'Ayala Land Premier & CTRL Corp JV', '5th Ave cor 28th St, Bonifacio Global City, Taguig', 'Engr. Carlos Mendoza', 'Foreman Pedro Santos', '2025-06-01', '2027-12-31', 450000000.00, 'Active', '45-story commercial skyscraper with 5 podium basement parking and LEED Gold standards.'),
+('a2222222-2222-2222-2222-222222222222', 'SITE-MTR-02', 'Metro Rail Line 7 - QC Depot', 'MRT-7 Depot & Guideway Viaduct', 'Department of Transportation (DOTr) / SMC', 'North Avenue cor Quirino Highway, Quezon City', 'Engr. Ronald Gomez', 'Foreman Danilo Ramos', '2025-01-15', '2028-06-30', 820000000.00, 'Active', 'Heavy civil infrastructure project covering rail stabling tracks, maintenance depot, and elevated viaduct segments.'),
+('a3333333-3333-3333-3333-333333333333', 'SITE-HRZ-03', 'Horizon Luxury Residences Phase 2', 'Horizon Towers Residential Resort', 'Horizon Land & Development Corp.', 'Cebu IT Park, Lahug, Cebu City', 'Engr. Maria Torres', 'Foreman Roberto Cruz', '2025-09-01', '2027-03-31', 280000000.00, 'Active', 'Twin-tower 28-storey luxury residential condominium with resort-style amenities and sky villas.'),
+('a4444444-4444-4444-4444-444444444444', 'SITE-VCS-04', 'VCS Batangas Container Port Terminal', 'Port Expansion & Container Yard', 'VCS International Port Terminal Inc.', 'Sta. Clara, Batangas City Port Complex', 'Engr. Antonio Reyes', 'To Be Assigned', '2026-11-01', '2028-12-31', 340000000.00, 'Planned', 'Deep-water container berth expansion with automated crane foundations.')
+ON CONFLICT (code) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
 -- 3. DESIGNATIONS / POSITIONS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.designations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) UNIQUE NOT NULL,
-    category VARCHAR(50) NOT NULL, -- e.g. Civil, Structural, Heavy Equipment, Electrical, Management
+    category VARCHAR(50) NOT NULL,
     default_rate NUMERIC(12, 2) DEFAULT 0.00,
     rate_type VARCHAR(20) DEFAULT 'Daily' CHECK (rate_type IN ('Hourly', 'Daily', 'Monthly')),
     status VARCHAR(20) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
@@ -55,7 +70,29 @@ CREATE TABLE IF NOT EXISTS public.designations (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Seed Sample Designations
+INSERT INTO public.designations (id, name, category, default_rate, rate_type, status, description)
+VALUES
+('b1111111-1111-1111-1111-111111111111', 'Master Carpenter', 'Finishing & Carpentry', 850.00, 'Daily', 'Active', 'Formworks, framework installation, scaffolding, and precision woodwork.'),
+('b2222222-2222-2222-2222-222222222222', 'Structural Steelman / Rebarman', 'Civil & Structural', 820.00, 'Daily', 'Active', 'Rebar fabrication, tying, structural steel layout and reinforcement.'),
+('b3333333-3333-3333-3333-333333333333', 'Structural Welder (NC-II)', 'Structural Welding', 950.00, 'Daily', 'Active', 'SMAW/FCAW certified welding of structural steel beams and heavy plates.'),
+('b4444444-4444-4444-4444-444444444444', 'Heavy Equipment Operator', 'Equipment & Machinery', 1100.00, 'Daily', 'Active', 'Operates tower cranes, excavators, payloaders, and heavy transit mixers.'),
+('b5555555-5555-5555-5555-555555555555', 'Master Electrician', 'Electrical & MEP', 900.00, 'Daily', 'Active', 'High voltage switchboards, conduit roughing, panel wiring, and load testing.'),
+('b6666666-6666-6666-6666-666666666666', 'Master Plumber', 'Mechanical & Plumbing', 850.00, 'Daily', 'Active', 'Sanitary lines, storm drainage, pumps, and fire protection piping.'),
+('b7777777-7777-7777-7777-777777777777', 'Mason (NC-II)', 'Civil & Structural', 780.00, 'Daily', 'Active', 'CHB laying, concrete pouring, plastering, and floor screeding.'),
+('b8888888-8888-8888-8888-888888888888', 'Construction Painter', 'Finishing & Carpentry', 750.00, 'Daily', 'Active', 'Surface preparation, primer coating, waterproofing, and epoxy finishes.'),
+('b9999999-9999-9999-9999-999999999999', 'Rigging Specialist', 'Equipment & Machinery', 920.00, 'Daily', 'Active', 'Heavy crane load rigging, slinging, signaling, and tandem crane lifting.'),
+('baaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'General Laborer', 'General Construction', 610.00, 'Daily', 'Active', 'Material hauling, excavation, concrete vibration, and general site duties.'),
+('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Construction Helper', 'General Construction', 570.00, 'Daily', 'Active', 'Trade assistance, tool preparation, clean-up, and site logistics.'),
+('bccccccc-cccc-cccc-cccc-cccccccccccc', 'Construction Site Foreman', 'Site Supervision', 38000.00, 'Monthly', 'Active', 'Direct field supervision of multi-trade crews, daily quotas, and safety protocols.'),
+('bddddddd-dddd-dddd-dddd-dddddddddddd', 'Site Safety & HSE Officer', 'Safety & Quality', 32000.00, 'Monthly', 'Active', 'DOLE-certified COSH safety officer, toolbox meetings, and hazard prevention.'),
+('beeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'QA/QC Inspector', 'Safety & Quality', 34000.00, 'Monthly', 'Active', 'Material testing, slump test, rebar spacing inspection, and punchlisting.'),
+('bfffffff-ffff-ffff-ffff-ffffffffffff', 'Project Engineer', 'Engineering & Management', 52000.00, 'Monthly', 'Active', 'Site execution, submittals, RFI management, and progress billings.')
+ON CONFLICT (name) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
 -- 4. DEPARTMENTS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.departments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) UNIQUE NOT NULL,
@@ -63,7 +100,19 @@ CREATE TABLE IF NOT EXISTS public.departments (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+INSERT INTO public.departments (name, code)
+VALUES
+('Civil & Structural Division', 'CIVIL'),
+('Electrical & MEP Division', 'MEP'),
+('Heavy Equipment Fleet', 'HEAVY_EQ'),
+('Site Operations & Field Management', 'SITE_OPS'),
+('Engineering & Project Management', 'ENG_PM'),
+('HSE & Safety Compliance', 'HSE_SAFETY')
+ON CONFLICT (name) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
 -- 5. EMPLOYEES MASTER TABLE
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.employees (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     employee_no VARCHAR(50) UNIQUE NOT NULL,
@@ -89,7 +138,7 @@ CREATE TABLE IF NOT EXISTS public.employees (
     hire_date DATE NOT NULL,
     status VARCHAR(30) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'On Leave', 'Suspended', 'Resigned', 'Terminated', 'End of Contract')),
     employment_type VARCHAR(50) DEFAULT 'Project-Based' CHECK (employment_type IN ('Regular', 'Project-Based', 'Probationary', 'Casual', 'Contractual')),
-    department_id UUID REFERENCES public.departments(id) ON DELETE SET NULL,
+    department VARCHAR(100),
     designation_id UUID REFERENCES public.designations(id) ON DELETE SET NULL,
     current_site_id UUID REFERENCES public.sites(id) ON DELETE SET NULL,
     supervisor VARCHAR(100),
@@ -109,7 +158,19 @@ CREATE TABLE IF NOT EXISTS public.employees (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Seed Key Construction Employees
+INSERT INTO public.employees (employee_no, first_name, middle_name, last_name, suffix, photo_url, gender, dob, civil_status, contact_no, email, address, emergency_contact, emergency_phone, emergency_relation, hire_date, status, employment_type, department, designation_id, current_site_id, supervisor, crew_name, salary_type, basic_rate, sss_no, philhealth_no, pagibig_no, tin_no)
+VALUES
+('CTRL-2026-0001', 'Juan', 'Ramos', 'Dela Cruz', '', 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250', 'Male', '1988-05-14', 'Married', '+63 917 555 1234', 'juan.delacruz@ctrlconstruction.ph', 'Pasig City', 'Maria Dela Cruz', '+63 918 555 4321', 'Spouse', '2024-03-15', 'Active', 'Project-Based', 'Civil & Structural Division', 'b1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', 'Foreman Pedro Santos', 'Formworks Crew Alpha', 'Daily', 850.00, '04-1234567-8', '12-050493821-3', '1210-4829-5019', '234-567-890-000'),
+('CTRL-2026-0002', 'Pedro', 'Bautista', 'Santos', 'Sr.', 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=250', 'Male', '1979-11-20', 'Married', '+63 920 888 7766', 'pedro.santos@ctrlconstruction.ph', 'Taytay, Rizal', 'Elena Santos', '+63 920 888 7767', 'Spouse', '2021-02-10', 'Active', 'Regular', 'Site Operations & Field Management', 'bccccccc-cccc-cccc-cccc-cccccccccccc', 'a1111111-1111-1111-1111-111111111111', 'Engr. Carlos Mendoza', 'Site 1 General Command', 'Monthly', 38000.00, '02-8765432-1', '19-384729104-5', '1098-3482-1928', '112-984-231-000'),
+('CTRL-2026-0003', 'Danilo', 'G.', 'Ramos', '', 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=250', 'Male', '1982-08-03', 'Married', '+63 919 444 3322', 'danilo.ramos@ctrlconstruction.ph', 'Quezon City', 'Luzviminda Ramos', '+63 919 444 3323', 'Spouse', '2022-06-01', 'Active', 'Regular', 'Infrastructure Division', 'bccccccc-cccc-cccc-cccc-cccccccccccc', 'a2222222-2222-2222-2222-222222222222', 'Engr. Ronald Gomez', 'MRT-7 Heavy Civil Team', 'Monthly', 36500.00, '03-5629183-4', '14-874029183-2', '1209-5839-2049', '184-739-102-000'),
+('CTRL-2026-0004', 'Mark Anthony', 'Flores', 'Reyes', '', 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=250', 'Male', '1992-04-18', 'Single', '+63 939 123 9988', 'mark.reyes@ctrlconstruction.ph', 'Binan, Laguna', 'Teresa Reyes', '+63 939 123 9989', 'Mother', '2024-08-15', 'Active', 'Project-Based', 'Civil & Structural Division', 'b3333333-3333-3333-3333-333333333333', 'a1111111-1111-1111-1111-111111111111', 'Foreman Pedro Santos', 'Welding & Steel Fab Alpha', 'Daily', 950.00, '04-9871234-5', '16-492817203-9', '1492-3849-1029', '302-849-183-000'),
+('CTRL-2026-0005', 'Arnel', 'P.', 'Bautista', '', 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?auto=format&fit=crop&q=80&w=250', 'Male', '1985-02-12', 'Married', '+63 945 321 0099', 'arnel.bautista@ctrlconstruction.ph', 'Caloocan City', 'Rowena Bautista', '+63 945 321 0098', 'Spouse', '2023-11-01', 'Active', 'Project-Based', 'Heavy Equipment Fleet', 'b4444444-4444-4444-4444-444444444444', 'a2222222-2222-2222-2222-222222222222', 'Foreman Danilo Ramos', 'Excavation & Crane Fleet', 'Daily', 1100.00, '01-4829103-9', '18-492019483-1', '1849-2049-3829', '294-820-194-000')
+ON CONFLICT (employee_no) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
 -- 6. EMPLOYEE SITE ASSIGNMENT HISTORY
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.employee_site_assignments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
@@ -123,17 +184,30 @@ CREATE TABLE IF NOT EXISTS public.employee_site_assignments (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
 -- 7. DOCUMENT CATEGORIES
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.document_categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(100) UNIQUE NOT NULL,
     code VARCHAR(50) UNIQUE NOT NULL,
-    group_type VARCHAR(50) NOT NULL, -- Personal, Employment, Construction/Site, Government
+    group_type VARCHAR(50) NOT NULL,
     is_required BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+INSERT INTO public.document_categories (name, code, group_type, is_required)
+VALUES
+('Personal ID & Civil Records', 'PERSONAL_DOC', 'Personal Documents', true),
+('Employment Contract & Medicals', 'EMPLOYMENT_DOC', 'Employment Documents', true),
+('Safety Training & HSE Cards', 'SAFETY_HSE_DOC', 'Construction / Site Documents', true),
+('Skills & TESDA NC Certifications', 'SKILLS_CERT_DOC', 'Construction / Site Documents', false),
+('Government Statutory Records', 'GOVT_STAT_DOC', 'Government Documents', true)
+ON CONFLICT (name) DO NOTHING;
+
+-- ----------------------------------------------------------------------------
 -- 8. EMPLOYEE DOCUMENTS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.employee_documents (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
@@ -142,7 +216,7 @@ CREATE TABLE IF NOT EXISTS public.employee_documents (
     file_name VARCHAR(255) NOT NULL,
     file_url TEXT NOT NULL,
     file_type VARCHAR(50),
-    file_size INTEGER, -- in bytes
+    file_size INTEGER,
     expiry_date DATE,
     notes TEXT,
     uploaded_by VARCHAR(100),
@@ -150,7 +224,9 @@ CREATE TABLE IF NOT EXISTS public.employee_documents (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
 -- 9. ATTENDANCE / TIME LOGS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.attendance_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
@@ -171,7 +247,9 @@ CREATE TABLE IF NOT EXISTS public.attendance_logs (
     UNIQUE(employee_id, log_date)
 );
 
+-- ----------------------------------------------------------------------------
 -- 10. PAYROLL PERIODS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.payroll_periods (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     period_name VARCHAR(100) NOT NULL,
@@ -188,19 +266,17 @@ CREATE TABLE IF NOT EXISTS public.payroll_periods (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
 -- 11. PAYROLL RECORDS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.payroll_records (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     period_id UUID NOT NULL REFERENCES public.payroll_periods(id) ON DELETE CASCADE,
     employee_id UUID NOT NULL REFERENCES public.employees(id) ON DELETE CASCADE,
     site_id UUID REFERENCES public.sites(id) ON DELETE SET NULL,
     designation_id UUID REFERENCES public.designations(id) ON DELETE SET NULL,
-    
-    -- Attendance Days/Hours
     days_worked NUMERIC(5, 2) DEFAULT 0.00,
     ot_hours NUMERIC(5, 2) DEFAULT 0.00,
-    
-    -- Earnings Breakdown
     basic_pay NUMERIC(12, 2) DEFAULT 0.00,
     ot_pay NUMERIC(12, 2) DEFAULT 0.00,
     holiday_pay NUMERIC(12, 2) DEFAULT 0.00,
@@ -210,8 +286,6 @@ CREATE TABLE IF NOT EXISTS public.payroll_records (
     hazard_allowance NUMERIC(12, 2) DEFAULT 0.00,
     other_bonuses NUMERIC(12, 2) DEFAULT 0.00,
     gross_pay NUMERIC(12, 2) DEFAULT 0.00,
-    
-    -- Deductions Breakdown
     sss_employee NUMERIC(12, 2) DEFAULT 0.00,
     sss_employer NUMERIC(12, 2) DEFAULT 0.00,
     philhealth_employee NUMERIC(12, 2) DEFAULT 0.00,
@@ -223,8 +297,6 @@ CREATE TABLE IF NOT EXISTS public.payroll_records (
     loan_deduction NUMERIC(12, 2) DEFAULT 0.00,
     other_deductions NUMERIC(12, 2) DEFAULT 0.00,
     total_deductions NUMERIC(12, 2) DEFAULT 0.00,
-    
-    -- Final Net Pay
     net_pay NUMERIC(12, 2) DEFAULT 0.00,
     status VARCHAR(30) DEFAULT 'Calculated',
     notes TEXT,
@@ -232,13 +304,15 @@ CREATE TABLE IF NOT EXISTS public.payroll_records (
     UNIQUE(period_id, employee_id)
 );
 
--- 12. GOVERNMENT CONTRIBUTION RULES (Configurable Architecture)
+-- ----------------------------------------------------------------------------
+-- 12. GOVERNMENT CONTRIBUTION RULES
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.government_contribution_rules (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     agency VARCHAR(20) NOT NULL CHECK (agency IN ('SSS', 'PhilHealth', 'Pag-IBIG', 'BIR_Tax')),
     bracket_min NUMERIC(12, 2) NOT NULL DEFAULT 0.00,
     bracket_max NUMERIC(12, 2),
-    employee_rate NUMERIC(6, 4), -- percentage (e.g. 0.045)
+    employee_rate NUMERIC(6, 4),
     employer_rate NUMERIC(6, 4),
     employee_fixed NUMERIC(12, 2) DEFAULT 0.00,
     employer_fixed NUMERIC(12, 2) DEFAULT 0.00,
@@ -248,7 +322,9 @@ CREATE TABLE IF NOT EXISTS public.government_contribution_rules (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
 -- 13. AUDIT LOGS
+-- ----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_name VARCHAR(100) NOT NULL,
@@ -260,7 +336,9 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- ----------------------------------------------------------------------------
 -- 14. ROW LEVEL SECURITY (RLS) POLICIES
+-- ----------------------------------------------------------------------------
 ALTER TABLE public.employees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.employee_documents ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payroll_records ENABLE ROW LEVEL SECURITY;
@@ -270,7 +348,6 @@ ALTER TABLE public.sites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.designations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Allow authenticated users to read and manage HR records according to Supabase JWT roles
 CREATE POLICY "Allow authenticated read on employees" ON public.employees FOR SELECT TO authenticated USING (true);
 CREATE POLICY "Allow HR/SuperAdmin write on employees" ON public.employees FOR ALL TO authenticated USING (true);
 
@@ -288,6 +365,8 @@ CREATE POLICY "Allow periods access to authenticated" ON public.payroll_periods 
 CREATE POLICY "Allow attendance access to authenticated" ON public.attendance_logs FOR ALL TO authenticated USING (true);
 CREATE POLICY "Allow audit access to authenticated" ON public.audit_logs FOR ALL TO authenticated USING (true);
 
--- 15. STORAGE BUCKETS (Run in Supabase SQL editor)
+-- ----------------------------------------------------------------------------
+-- 15. STORAGE BUCKETS (Optional: Run in Supabase Storage setup)
+-- ----------------------------------------------------------------------------
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('employee-documents', 'employee-documents', false);
 -- INSERT INTO storage.buckets (id, name, public) VALUES ('employee-photos', 'employee-photos', true);
