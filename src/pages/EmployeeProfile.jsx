@@ -696,17 +696,41 @@ export default function EmployeeProfile() {
 
       {/* Tab 6: Attendance Logs */}
       {activeTab === 'attendance' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display">
               Timekeeping & Attendance History
             </h3>
             <Link to="/attendance" className="text-xs font-bold text-brand-600 hover:text-brand-700">
-              View Master Time Logs →
+              View Master Logs →
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Attendance Cards (sm:hidden) */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {workerAttendance.length > 0 ? (
+              workerAttendance.map(att => (
+                <div key={att.id} className="py-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900 text-xs">{att.logDate}</span>
+                    <StatusBadge status={att.status} size="xs" />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-600">
+                    <span className="font-mono">{att.timeIn || '—'} – {att.timeOut || '—'}</span>
+                    <span className="font-bold text-slate-800">{att.regularHours}h {att.otHours > 0 && `(+${att.otHours}h OT)`}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 truncate">
+                    {siteMap[att.siteId] || 'Assigned Site'}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-xs text-slate-400 py-4 text-center">No attendance logs found.</p>
+            )}
+          </div>
+
+          {/* Desktop Attendance Table (hidden sm:block) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b">
@@ -749,17 +773,61 @@ export default function EmployeeProfile() {
 
       {/* Tab 7: Payroll & Payslips (Requirement #18) */}
       {activeTab === 'payroll' && (
-        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
+        <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200/80 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider font-display">
               Payroll History & Printable Payslips
             </h3>
             <Link to="/payroll" className="text-xs font-bold text-brand-600 hover:text-brand-700">
-              Go to Payroll Management →
+              Go to Payroll →
             </Link>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Payroll Cards (sm:hidden) */}
+          <div className="block sm:hidden divide-y divide-slate-100">
+            {workerPayroll.length > 0 ? (
+              workerPayroll.map(rec => {
+                const period = payrollPeriods.find(p => p.id === rec.periodId) || {};
+                return (
+                  <div key={rec.id} className="py-3 space-y-2">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-bold text-slate-900 text-xs">{period.periodName || 'Semi-Monthly Run'}</h4>
+                        <p className="text-[10px] text-slate-400">Payout: {period.payoutDate || 'N/A'}</p>
+                      </div>
+                      <span className="font-extrabold font-mono text-emerald-600 text-sm">
+                        {formatCurrency(rec.netPay)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-600 pt-1">
+                      <span>Gross: {formatCurrency(rec.grossPay)}</span>
+                      <button
+                        onClick={() => {
+                          generatePayslipPDF(
+                            rec,
+                            employee,
+                            period,
+                            designationMap[employee.designationId],
+                            siteMap[employee.currentSiteId],
+                            companyProfile
+                          );
+                          addToast(`Generated Payslip PDF for ${employee.firstName} ${employee.lastName}`, 'success');
+                        }}
+                        className="px-2.5 py-1 bg-slate-900 text-white font-bold text-[11px] rounded-lg flex items-center gap-1"
+                      >
+                        <Printer className="w-3 h-3" /> PDF Payslip
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-xs text-slate-400 py-4 text-center">No payroll records found.</p>
+            )}
+          </div>
+
+          {/* Desktop Payroll Table (hidden sm:block) */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider border-b">

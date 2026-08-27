@@ -41,8 +41,8 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
       )}
 
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 flex flex-col w-64 bg-slate-900 border-r border-slate-800 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col w-72 sm:w-64 bg-slate-900 border-r border-slate-800 transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
         }`}
       >
         {/* Brand Header */}
@@ -50,6 +50,15 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
           <NavLink to="/" className="flex items-center gap-2" onClick={() => setIsMobileOpen(false)}>
             <Logo variant="full" size="default" light={true} />
           </NavLink>
+
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen(false)}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 lg:hidden"
+            aria-label="Close navigation"
+          >
+            <span className="text-xl font-bold leading-none">✕</span>
+          </button>
         </div>
 
         {/* Navigation Items */}

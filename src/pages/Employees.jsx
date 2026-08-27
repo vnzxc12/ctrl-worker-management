@@ -295,9 +295,86 @@ export default function Employees() {
         </div>
       </div>
 
-      {/* Employees Table Card */}
+      {/* Employees Roster Container */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Card List (md:hidden) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {paginatedEmployees.length > 0 ? (
+            paginatedEmployees.map((emp) => (
+              <div
+                key={emp.id}
+                onClick={() => navigate(`/employees/${emp.id}`)}
+                className="p-4 hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer space-y-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={emp.photoUrl}
+                      alt=""
+                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-slate-100 flex-shrink-0"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150';
+                      }}
+                    />
+                    <div>
+                      <h3 className="font-bold text-slate-900 font-display text-sm">
+                        {emp.firstName} {emp.lastName} {emp.suffix || ''}
+                      </h3>
+                      <div className="text-[11px] font-mono text-slate-500">{emp.employeeNo}</div>
+                      <div className="text-xs font-semibold text-brand-600 mt-0.5">
+                        {designationMap[emp.designationId] || 'Unassigned Trade'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <StatusBadge status={emp.status} size="xs" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-medium block">Stationed Site</span>
+                    <div className="flex items-center gap-1 text-slate-700 font-medium truncate mt-0.5">
+                      <Building2 className="w-3 h-3 text-brand-500 flex-shrink-0" />
+                      <span className="truncate">{siteMap[emp.currentSiteId] || 'Unassigned (Pool)'}</span>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 font-medium block">Pay Rate</span>
+                    <span className="font-bold text-slate-900 font-mono text-xs">
+                      {formatCurrency(emp.basicRate)}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-sans ml-1">/{emp.salaryType.toLowerCase()}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                  <span>{emp.contactNo || 'No phone'}</span>
+                  <span className="text-brand-600 font-semibold flex items-center gap-0.5">
+                    View 201 Profile →
+                  </span>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="py-8">
+              <EmptyState
+                title="No construction workers found"
+                description="Try adjusting your search or active filters."
+                actionText="Reset Filters"
+                onAction={() => {
+                  setSearch('');
+                  setSiteFilter('ALL');
+                  setDesignationFilter('ALL');
+                  setStatusFilter('ALL');
+                }}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View: Multi-Column Table (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">

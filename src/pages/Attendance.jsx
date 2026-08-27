@@ -262,9 +262,69 @@ export default function Attendance() {
         </div>
       </div>
 
-      {/* Logs Table */}
+      {/* Logs Container */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Attendance Cards (md:hidden) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {filteredLogs.length > 0 ? (
+            filteredLogs.map(log => {
+              const emp = employees.find(e => e.id === log.employeeId);
+              return (
+                <div key={log.id} className="p-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">
+                        {empMap[log.employeeId] || 'Worker'}
+                      </h4>
+                      <p className="text-[11px] font-mono text-slate-500">{emp?.employeeNo} • {log.logDate}</p>
+                    </div>
+                    <StatusBadge status={log.status} size="xs" />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Shift Hours</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {log.timeIn || '—'} – {log.timeOut || '—'}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 block font-medium">Recorded Time</span>
+                      <span className="font-bold text-slate-900">{log.regularHours}h Reg</span>
+                      {log.otHours > 0 && (
+                        <span className="text-brand-600 font-bold ml-1 text-xs">+{log.otHours}h OT</span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex items-center gap-1 text-slate-600 truncate max-w-[200px]">
+                      <Building2 className="w-3.5 h-3.5 text-brand-500 flex-shrink-0" />
+                      <span className="truncate">{siteMap[log.siteId] || 'Assigned Site'}</span>
+                    </div>
+
+                    {log.notes && (
+                      <span className="text-[11px] text-slate-400 italic truncate max-w-[120px]">
+                        "{log.notes}"
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div className="py-8">
+              <EmptyState
+                title="No time logs match your criteria"
+                description="Record manual daily timesheets or import bulk attendance via Excel."
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Desktop View: Full Table (hidden md:block) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs sm:text-sm">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">

@@ -375,9 +375,102 @@ export default function PayrollPeriodDetail() {
         </select>
       </div>
 
-      {/* Payroll Register Table */}
+      {/* Payroll Register Container */}
       <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile View: Payroll Summary Cards (lg:hidden) */}
+        <div className="block lg:hidden divide-y divide-slate-100">
+          {filteredRecords.map(rec => {
+            const emp = empMap[rec.employeeId] || { firstName: rec.employeeName, lastName: '', employeeNo: rec.employeeNo };
+            const statutoryTotal = rec.sssDeduction + rec.philhealthDeduction + rec.pagibigDeduction + rec.taxDeduction;
+
+            return (
+              <div key={rec.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">
+                      {rec.employeeName || `${emp.firstName} ${emp.lastName}`}
+                    </h4>
+                    <p className="text-[11px] font-mono text-slate-500">{rec.employeeNo || emp.employeeNo}</p>
+                    <p className="text-xs font-semibold text-brand-600 mt-0.5">
+                      {desMap[rec.designationId] || 'Craft'} • {siteMap[rec.siteId] || 'Site'}
+                    </p>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 font-medium block">Net Pay</span>
+                    <span className="text-base font-extrabold text-emerald-600 font-mono">
+                      {formatCurrency(rec.netPay)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-xs font-mono">
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-sans block">Basic Pay</span>
+                    <span className="font-bold text-slate-800">{formatCurrency(rec.basicPay)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 font-sans block">Gross Pay</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(rec.grossPay)}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-[10px] text-slate-400 font-sans block">Deductions</span>
+                    <span className="font-bold text-rose-600">-{formatCurrency(statutoryTotal)}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <span className="text-slate-500 text-[11px]">
+                    {rec.daysWorked} days {rec.otHours > 0 && `(+${rec.otHours}h OT)`}
+                  </span>
+
+                  <div className="flex items-center gap-2">
+                    {!isApprovedOrPaid && hasPermission('payroll:write') && (
+                      <button
+                        onClick={() => {
+                          setEditingRecord(rec);
+                          setEditFormData({
+                            daysWorked: rec.daysWorked,
+                            otHours: rec.otHours,
+                            siteAllowance: rec.siteAllowance,
+                            hazardAllowance: rec.hazardAllowance,
+                            otherBonuses: rec.otherBonuses,
+                            cashAdvance: rec.cashAdvance,
+                            loanDeduction: rec.loanDeduction,
+                            otherDeductions: rec.otherDeductions
+                          });
+                        }}
+                        className="px-2.5 py-1 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg flex items-center gap-1"
+                      >
+                        <Edit2 className="w-3 h-3" /> Adjust
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        generatePayslipPDF(
+                          rec,
+                          emp,
+                          period,
+                          desMap[rec.designationId],
+                          siteMap[rec.siteId],
+                          companyProfile
+                        );
+                        addToast(`Downloaded PDF Payslip for ${rec.employeeName}`, 'success');
+                      }}
+                      className="px-3 py-1 text-xs font-bold text-white bg-slate-900 hover:bg-brand-600 rounded-lg flex items-center gap-1 shadow-sm transition-colors"
+                    >
+                      <Printer className="w-3.5 h-3.5" /> Payslip PDF
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Desktop View: Multi-Column Table (hidden lg:block) */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
