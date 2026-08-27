@@ -9,8 +9,8 @@ const getSupabaseConfig = () => {
   const envKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
   return {
-    url: storedUrl || envUrl || 'https://demo-ctrl-construction.supabase.co',
-    key: storedKey || envKey || 'demo-anon-key'
+    url: storedUrl || envUrl || 'https://xggcznnaoneibpyvtgfv.supabase.co',
+    key: storedKey || envKey || ''
   };
 };
 
