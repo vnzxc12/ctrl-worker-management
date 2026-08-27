@@ -4,12 +4,12 @@ const AuthContext = createContext();
 
 export const DEMO_HR_USER = {
   id: 'usr-hr-01',
-  email: 'hr@ctrlconstruction.ph',
+  email: 'rayford.duro@ctrlconstruction.ph',
   password: 'Password123!',
-  fullName: 'Maria Santos',
+  fullName: 'Rayford Duro',
   role: 'HR Admin',
-  title: 'Senior HR Operations Officer',
-  avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=150',
+  title: 'HR Operations Lead',
+  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=150',
   permissions: ['*']
 };
 
@@ -18,7 +18,15 @@ export const DEMO_USERS = [DEMO_HR_USER];
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('ctrl_auth_user');
-    return saved ? JSON.parse(saved) : DEMO_HR_USER;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Migrate previous demo session name if needed
+      if (parsed.fullName !== 'Rayford Duro') {
+        return DEMO_HR_USER;
+      }
+      return parsed;
+    }
+    return DEMO_HR_USER;
   });
 
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -32,15 +40,6 @@ export function AuthProvider({ children }) {
   }, [currentUser, isAuthenticated]);
 
   const login = (email, password) => {
-    // Validate demo credentials or accept standard demo input
-    const normalizedEmail = (email || '').trim().toLowerCase();
-    if (normalizedEmail === DEMO_HR_USER.email.toLowerCase() || normalizedEmail === 'admin@ctrlconstruction.ph' || normalizedEmail === 'hr.admin@ctrlconstruction.ph' || normalizedEmail.includes('hr')) {
-      setCurrentUser(DEMO_HR_USER);
-      setIsAuthenticated(true);
-      return { success: true };
-    }
-
-    // Default to HR User for demo convenience
     setCurrentUser(DEMO_HR_USER);
     setIsAuthenticated(true);
     return { success: true };
@@ -52,7 +51,7 @@ export function AuthProvider({ children }) {
   };
 
   const hasPermission = () => {
-    return true; // Single HR demo account has full administrative and operational access
+    return true; // Single HR demo account has full administrative access
   };
 
   return (

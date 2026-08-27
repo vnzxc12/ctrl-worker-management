@@ -25,7 +25,7 @@ export default function Login() {
   const { addToast } = useToast();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState('hr@ctrlconstruction.ph');
+  const [email, setEmail] = useState(demoAccount.email);
   const [password, setPassword] = useState('Password123!');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -184,7 +184,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="hr@ctrlconstruction.ph"
+                  placeholder="rayford.duro@ctrlconstruction.ph"
                   className="w-full pl-10 pr-4 py-2.5 text-sm bg-slate-900 border border-slate-700/80 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500 transition-all placeholder:text-slate-500"
                 />
               </div>
