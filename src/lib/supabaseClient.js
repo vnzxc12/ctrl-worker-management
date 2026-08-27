@@ -10,7 +10,7 @@ const getSupabaseConfig = () => {
 
   return {
     url: storedUrl || envUrl || 'https://xggcznnaoneibpyvtgfv.supabase.co',
-    key: storedKey || envKey || ''
+    key: storedKey || envKey || 'sb_publishable_r7SLXUdWzp72FNuPs6N0fg_77BYsXmM'
   };
 };
 
