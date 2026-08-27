@@ -9,14 +9,17 @@ import {
   Plus,
   CheckCircle2,
   LogOut,
-  Sparkles
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePWA } from '../../context/PWAContext';
 
 export default function Header({ setIsMobileOpen }) {
   const { employees, sites, designations } = useData();
   const { currentUser, logout, hasPermission } = useAuth();
+  const { promptInstall, isInstalled } = usePWA();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -247,6 +250,20 @@ export default function Header({ setIsMobileOpen }) {
             </div>
           )}
         </div>
+
+        {/* Install from Browser Button */}
+        {!isInstalled && (
+          <button
+            type="button"
+            onClick={promptInstall}
+            className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-brand-600 bg-slate-100 hover:bg-brand-50 border border-slate-200 hover:border-brand-200 rounded-xl transition-all shadow-sm"
+            title="Install CTRL Construction HR App on this Device"
+          >
+            <Smartphone className="w-3.5 h-3.5 text-brand-500" />
+            <span className="hidden sm:inline">Install App</span>
+            <span className="sm:hidden">Install</span>
+          </button>
+        )}
 
         {/* Quick Action Hire Button */}
         {hasPermission('employees:write') && (

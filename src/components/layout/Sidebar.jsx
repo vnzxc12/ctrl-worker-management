@@ -11,13 +11,16 @@ import {
   Settings,
   Shield,
   LogOut,
-  Sparkles
+  Sparkles,
+  Smartphone
 } from 'lucide-react';
 import Logo from '../../assets/Logo';
 import { useAuth } from '../../context/AuthContext';
+import { usePWA } from '../../context/PWAContext';
 
 export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
   const { currentUser, logout } = useAuth();
+  const { promptInstall, isInstalled } = usePWA();
 
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard },
@@ -88,6 +91,20 @@ export default function Sidebar({ isMobileOpen, setIsMobileOpen }) {
             );
           })}
         </div>
+
+        {/* Install from Browser Button in Sidebar */}
+        {!isInstalled && (
+          <div className="px-3 pb-2">
+            <button
+              type="button"
+              onClick={promptInstall}
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-brand-600 to-brand-700 hover:from-brand-500 hover:to-brand-600 shadow-md shadow-brand-900/40 transition-all hover:scale-[1.02]"
+            >
+              <Smartphone className="w-4 h-4" />
+              <span>Install Web App</span>
+            </button>
+          </div>
+        )}
 
         {/* Demo Account Badge & Logout Section */}
         <div className="p-3 mx-3 mb-3 rounded-xl bg-slate-800/80 border border-slate-700/60 shadow-inner space-y-2.5">

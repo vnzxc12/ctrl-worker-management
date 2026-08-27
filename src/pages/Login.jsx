@@ -14,14 +14,17 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Key
+  Key,
+  Smartphone
 } from 'lucide-react';
 import Logo from '../assets/Logo';
 import { useAuth, DEMO_HR_USER } from '../context/AuthContext';
 import { useToast } from '../components/common/Toast';
+import { usePWA } from '../context/PWAContext';
 
 export default function Login() {
   const { login, demoAccount } = useAuth();
+  const { promptInstall, isInstalled } = usePWA();
   const { addToast } = useToast();
   const navigate = useNavigate();
 
@@ -257,6 +260,18 @@ export default function Login() {
               )}
             </button>
           </form>
+
+          {/* Install from Browser Button on Login */}
+          {!isInstalled && (
+            <button
+              type="button"
+              onClick={promptInstall}
+              className="w-full py-2.5 px-4 text-xs font-bold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              <Smartphone className="w-4 h-4 text-brand-400" />
+              <span>Install CTRL HR App on this Device</span>
+            </button>
+          )}
 
           {/* Security footnote */}
           <div className="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2.5">
